@@ -1,27 +1,8 @@
 const {isKanji,hasKanji} =require('./kanji')
 const fs=require('fs')
 const axios = require('axios');
-const {JSDOM}=require('jsdom')
-
-// get the original post based on the book name
-async function get_original(name){
-	console.log("get original")
-	const res=await axios.get(`https://jnovels.com/?s=${name.replace(" ","+")}`, { headers: { Accept: 'application/json', 'Accept-Encoding': 'identity' }, params: { trophies: true } })
-	const dom=new JSDOM(res.data).window.document
-	const articlelist=dom.querySelectorAll("article")
-	let list=[]
-	articlelist.forEach(element => {
-		try{
-			list.push(element.querySelectorAll("div")[1].querySelector("p").querySelector("a").getAttribute("href"))
-		}catch{
-			//console.log("no original post")
-		}
-		
-	});
-	let set=[...new Set(list)]
-	set=set.filter(e=>e.includes("epub"))
-	return set
-}
+const {JSDOM}=require('jsdom');
+const { post } = require('jquery');
 
 // python code
 function getbook(url){
@@ -31,233 +12,78 @@ function getbook(url){
 	});
 }
 
-//construct a book
-function list(href,olink){
-	let bl=[]
-	let i=0
-	let bookl=[]
-	let masterbl=[]
-	let num=0
-	href.map(l=>{
-		i++
-		const child=l.querySelector("a")
-		let name=l.textContent.replace("Download","").replace("download","").replace("DOWNLOAD","").replace(child.innerHTML,"") + child.innerHTML.replace("Download","").replace("download","").replace("DOWNLOAD","")
-		while(name.includes("<")&&name.includes(">")){
-			name=name.replace(/<*>/, '')
-		}
-
-		if(!name){
-			name=child.innerHTML.replace("Download","").replace("download","").replace("DOWNLOAD","")
-		}
-		
-		name=name.replaceAll("—","")
-		let nl=[]
-		let n=name.matchAll(/\d/g)
-		for(e of n){
-			nl.push(e.index)
-		}
-
-		if(nl.length>0){
-			name=name.substring(0,nl.at(-1)+1)
-		}else{
-			name="volume "+i.toString()
-		}
-
-		if(!name || name==""){
-			name="volume "+i.toString()
-		}
-		let link=child.getAttribute("href")
-
-		if(link&&!link.includes("discord") && !link.includes("jnovels") && !link.includes("google") && !link.includes("wiki") && link.length>1){
-			if(bookl.find(a=>a.name===name)){
-				if(bookl.find(a=>a.link===link)){
-
-				}else{
-					masterbl.push({"subtitle":bookl[0].name,"id":olink,"list":bookl})
-					i=1
-					num=0
-					bookl=[]
-					bookl.push({"id":num,"name":name,"link":link,"owned":false})
-				}
-			}else{
-				bookl.push({"id":num,"name":name,"link":link,"owned":false})	
-			}
-			num++
-		}
-		
-		
-	})
-	bookl=bookl.filter(a=>!(a===null))
-	if(bookl.length>0){
-		console.log("book")
-		masterbl.push({"subtitle":bookl[0].name,"id":olink,"list":bookl})
-		console.log(masterbl)
-		return masterbl
+async function getoriginal(a){
+	let data=await JSDOM.fromURL(a)
+	let dom=data.window.document
+	let original=dom.querySelector(`[class*="post-content clear"]`).querySelector("a")
+	if(original.innerHTML=="Refer to original post"||original.innerHTML=="Refer to series page for latest links"){
+		return original.getAttribute("href")
 	}
-	else return null
-		
+	return
 }
 
-//construct books in a series
-function links(dom,dbp,link){
-	let i=0
-	let articles=dom.getElementsByTagName("article")
-	let article=Array.prototype.slice.call(articles).filter(a=>a.getAttribute("id").includes("post"))[0]
-    let href=Array.prototype.slice.call(article.getElementsByClassName("post-content clear")[0].querySelectorAll("a"))
-    href=href.filter(a=>a.getAttribute("href")!==null && !a.getAttribute("href").includes("jnovels.com")&&!a.getAttribute("href").includes("google.com") && !a.getAttribute("href").includes("discord") && a.getAttribute("rel")==null &&(a.getAttribute("class")==null|| a.getAttribute("class").includes("external")))
-    href=href.filter(a=>a.getAttribute("href")!==a.innerHTML)
-    let href2=[]
-    if(href.length>1){
-        let parent=href[0].parentElement
-        let a=true
-        while(parent.childElementCount==1|| a){
-            parent=parent.parentElement
-            a=false
-            for(n of parent.childNodes){
-                if(n.nodeName==="a"){
-                    a=true
-                }
-            }
-        }
-        let test=parent.parentElement
-        if(test.getAttribute("class")=="post-content clear"){
-            if(parent.nodeName!=="div"){
-                
-                for(a of test.querySelectorAll(parent.nodeName)){
-                    href2.push([...Array.prototype.slice.call(a.querySelectorAll("a"))])
-                }
-
-            }else{
-                href2.push(Array.prototype.slice.call(parent.querySelectorAll("a")))
-            }
-            
-        }else{
-            href2.push(Array.prototype.slice.call(test.querySelectorAll("a")))
-        }
-        
-    }
-    href=href2.map(a=>a.map(a=>a.parentElement))
-    let divs=article.getElementsByTagName("div")
-    let divimg=Array.prototype.slice.call(divs).filter(a=>a.getAttribute("class")!=null&&a.getAttribute("class").includes("featured-media"))[0]
-    dbp.img=divimg.getElementsByTagName("img")[0].getAttribute("src")
-    let masterbl=[]
-    href.map(a=>{
-        let l=list(a,link)
-		if(l!==null){
-			console.log("l")
-			console.log(l)
-			masterbl.push(...l)
+function getbooks(book){
+	return(JSDOM.fromURL(book.link).then(data=>{
+		let dom=data.window.document
+		console.log(book.title.length)
+		if(book.title==''){
+			book.title=dom.querySelector(`[class*="post-title entry-title"]`).querySelector('a').innerHTML
 		}
-    })
-	i=0
-	let k
-	dbp.booklist=masterbl
-    return dbp
+		let links=dom.querySelector(`[class*="post-content clear"]`).innerHTML.split("<br>")
+		book.pic=dom.querySelector(`[class*="featured-media"]`).querySelector("img").getAttribute("src")
+		links=links.filter(a=>a.includes("(Mirror)"))
+		links=links.map(a=>(a.match(/(?<=\<a\shref=.*?\>).*?(?=\<\/a\>)/g)))
+		book.books=links.map(a=>{return {"book":a[0].replace(" Premium",""),"link":a[1].match(/href="(.*?)"/g)[0].replace("href=","")}})
+		return book
+	}))
 }
 
-
-
-//get list of books form original post
-async function getbooklist(link,search,d){
-	console.log(link)
-	let dbp={}
-	if(d.list==null){
-		dbp=d
-	}else{
-		dbp={"title":null,"link":null,"search":[],"img":null,"booklist":[],"number":""}
-	}
-	if(link){
-
-		let res=await axios.get(link,{maxRedirects:10, headers:{Accept: 'application/json', 'Accept-Encoding': 'identity' ,params: { trophies: true }}} )
-		const dom=new JSDOM(res.data).window.document
+async function getarticles(a){
+	return (JSDOM.fromURL(`https://thatnovelcorner.com/?s=${a.replace(" ","+")}`).then(async data=>{
+		let dom=data.window.document
+		let posts=Array.from(dom.getElementById("posts").querySelectorAll("article"))
+		posts=posts.map(post=>post.querySelector("a").getAttribute("href").split("-vol")[0])
+		posts=posts.map(post=>(post.slice(-1)=="/")?post.slice(0,-1):post)
+		posts=posts.filter((e,i)=>posts.indexOf(e)==i)
+		posts=posts.map(post=>post.replace("https://thatnovelcorner.com/",""))
+		console.log(posts)
 		
-		dbp=links(dom,dbp,link)
-		
-		let title=dom.getElementById("editassociated")
-		if(title){
-			title=title.innerHTML.split("<br>").filter(a=>!hasKanji(a)).map(a=>a.replace("\n",""))
-			console.log(title)
-			dbp.title=title
-		}else{
-			dbp.title=[]
-		}
+		return posts
 
-		dbp.link=link
-		if(!dbp.search.includes(search)&& dbp.search!==""){
-			dbp.search.push(search)
-		}
-
-
-		console.log(dbp)
-		return dbp
-	}else{
+	}).catch(()=>{
+		console.log("error in getting")
 		return null
-	}
-	
-	
+	}))
 }
 
-//handle a book
-async function handlebook(a){
-	let db=JSON.parse(fs.readFileSync('./db.json'))
-	let book=[]
-	if(db.list.length>0){
-		book=db.list.filter(d=>d.search.includes(a))
-	}
-	if(book.length==0){
-		let r=await get_original(a)
-		r=r[0]
-		let dbp=await getbooklist(r,a,db)
-		if(dbp){
-			let l=db.list.filter(a=>a.link==dbp.link)[0]
-			console.log[l]
-			if(l){
-				let i=db.list.indexOf(l)
-				console.log(i)
-				dbp.search=db.list[i].search.concat(dbp.search)
-				db.list[i]=dbp
-				
-				console.log(db.list[i])
-				fs.writeFileSync("./db.json",JSON.stringify(db))
-				return dbp
-			}else{
-				db.list.push(dbp)
-				
-				fs.writeFileSync("./db.json",JSON.stringify(db))
-				return dbp
-			}
-		}
-			
-	}else{
-		console.log("book:1")
-		console.log(book)
-		book=book[0]
-		let dbp=await getbooklist(book.link,a,book)
-		if(dbp.link){
-			let i=db.list.indexOf(book)
-			db.list[i]=dbp
-			fs.writeFileSync("./db.json",JSON.stringify(db))
-			return dbp
-		
-		}
-	}
+function modify(i,a){
+	let db=JSON.parse(fs.readFileSync("db.json"))
+	console.log(typeof(a.search))
+	db[i].title=(typeof(a.title)==="undefined")? db[i].title : a.title
+	db[i].search=(typeof(a.search)==="undefined")? db[i].search : a.search
+	db[i].link=(typeof(a.link)==="undefined")? db[i].link : a.link
+	db[i].pic=(typeof(a.pic)==="undefined")? db[i].link : a.pic
+	fs.writeFileSync("db.json",JSON.stringify(db))
+	return db[i]
 }
-//update all books
-async function updateall(){
+
+async function formjson(a){
+	console.log(a)
 	let db=JSON.parse(fs.readFileSync("./db.json"))
-	let books=db.list
-	console.log(books)
-	books.map(book=>{
-		getbooklist(book.link,"",book).then(dbp=>{
-			if(dbp.link){
-				let i=db.list.indexOf(book)
-				db.list[i]=dbp
-				fs.writeFileSync("./db.json",JSON.stringify(db))
-				return dbp
-			
-			}})
-	})
+	let book=db.filter(book=>book.link && book.link.includes(a))
+	if(book.length==0){
+		book={"title":"","search":[a,a.replaceAll("-"," ")],"books":[],"index":db.length,"link":`https://thatnovelcorner.com/${a.replace(" ","+")}`,"pic":""}
+		book=await getbooks(book)
+		db.push(book)
+	}else{
+		book=book[0]
+		book=await getbooks(book)
+		console.log(book)
+		
+	}
 
+	fs.writeFileSync("./db.json",JSON.stringify(db))
+	return book
 }
 
-module.exports={updateall,getbook,handlebook}
+module.exports= {getbook,getarticles,formjson,modify}

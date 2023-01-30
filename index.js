@@ -1,40 +1,51 @@
-
-
 const fs = require('fs');
 const express=require('express')
 const cors=require('cors')
 const spawn=require('child_process').spawn;
-const {updateall,getbook,handlebook}=require('./bookcode/books')
+const {getarticles,getbook,formjson, modify}=require('./bookcode/books')
 const app=express()
+const port="3001"
+
 
 app.use(express.json())
 app.use(cors())
 
 
-
-app.get("/api/book",async (req,res)=>{
+//downloads the book
+app.get("/api/get",async (req,res)=>{
 	getbook(req.body.link)
 	res.send("getting")
 })
-
+//get all json of vbooks
 app.get("/api/json",async (req,res)=>{
 	res.json(JSON.parse(fs.readFileSync("./db.json")))
 })
-
+//updates all books
+/*
 app.get("/api",async (req,res)=>{
 	updateall()
 	res.send("updating")
 })
+*/
+//find books on a given series
+app.get("/api/series",async (req,res)=>{
+	let book=formjson(req.body.link)
+	res.send(book)
+})
+	
 
-
-
-
-app.post("/api/getbook",async (req,res)=>{
-	handlebook(req.body.book).then(a=>{
-		res.json(a)})
+app.get("/api/modify",async(req,res)=>{
+	let db=modify(req.body.i,req.body.book)
+	res.send(db)
+})
+//find link for different series, to be chosen later
+app.get("/api/findseries",async (req,res)=>{
+	console.time
+	res.send(await getarticles(req.body.book))
+	console.timeEnd()
 })
 
-app.listen('3001','0.0.0.0',() => {
-    console.log("started")
+app.listen(port,'0.0.0.0',() => {
+    console.log(`started on port ${port}`)
 })
 

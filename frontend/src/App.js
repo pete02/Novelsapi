@@ -6,10 +6,11 @@ import Overlay from './components/overlay';
 
 async function fetch(){
   try{
-    let r=(await axios.get("http://localhost:3001/api/json")).data.list
+    let r=(await axios.get("http://localhost:3001/api/json")).data
     console.log(r)
     return r
   }catch{
+    console.log("erro")
     return []
   }
   
@@ -98,7 +99,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <form>
-          <input value={search} onChange={changeSearch} onKeyDown={handleKeyDown}></input><button onClick={ouside}>outside search</button>
+          <input value={search} onChange={changeSearch} onKeyDown={handleKeyDown}></input>
         </form>
         <button onClick={toggle}></button>
         <Overlay isOpen={isOpen} onClose={toggle} current={current}><h1>open</h1></Overlay>

@@ -10,9 +10,9 @@ const Table=({filerlist,set})=>{
                     return(<tr key={i}>
                         {a.map(b=>{
                             return(
-                                <td key={b.img}>
+                                <td key={b.pic}>
                                     <button onClick={()=>set(b)}>
-                                        <img src={b.img} alt="" className='photo'/>
+                                        <img src={b.pic} alt="" className='photo'/>
                                     </button>
                                 </td>
                             )

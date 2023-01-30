@@ -15,6 +15,9 @@ import csv
 import random
 
 
+
+
+
 def listen(url):
     doc = requests.get(url)
     with open('payload.mp3', 'wb') as f:
@@ -61,3 +64,38 @@ def check_exists_by_xpath(xpath):
     except:
         return False
     return True
+
+
+
+def run(link):
+    options= webdriver.ChromeOptions()
+    #options.binary_location=r"/usr/bin/brave-browser"
+    options.binary_locations=r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+    options.add_argument(r"--user-data-dir=C:\Users\petri\Documents\koodaus\Jnovelsapi\User Data")
+    #options.add_argument("--no-sandbox")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("useAutomationExtension", False)
+    options.headless = True
+    driver = webdriver.Chrome(executable_path="chromedriver.exe",chrome_options=options)
+    driver.get(link)
+    time.sleep(3)
+    b=driver.find_element(By.ID,"btn-main")
+    if b.get_attribute("innerHTML")=="I'm a human":
+        b.click()
+    time.sleep(10)
+    driver.find_element(By.CLASS_NAME,"btn-main").click()
+    time.sleep(10)
+    print(driver.current_url)
+
+if(sys.argv[1] and "http" in sys.argv[1]):
+    print("done")
+    try:
+        run(sys.argv[1])
+    except Exception as e:
+        print("problem")
+        print(e)
+        sys.stdout.flush()
+        #driver.quit()
+        
+    
+    
