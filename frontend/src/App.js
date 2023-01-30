@@ -101,7 +101,6 @@ function App() {
         <form>
           <input value={search} onChange={changeSearch} onKeyDown={handleKeyDown}></input>
         </form>
-        <button onClick={toggle}></button>
         <Overlay isOpen={isOpen} onClose={toggle} current={current}><h1>open</h1></Overlay>
         <Table filerlist={filerlist}set={toggle}/>
       </header>

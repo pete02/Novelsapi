@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "nodemon index.js",
-    "build": "docker build --tag lumilukko/jsnovelapi ."
+    "build": "docker build --tag lumilukko/jsnovelapi .",
+    "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
