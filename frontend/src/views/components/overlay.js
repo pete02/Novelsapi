@@ -1,7 +1,7 @@
 
 import { ReactDOM } from "react";
 import "./overlay.css";
-import List from "./list";
+import List from "./bookbutton";
 
 export function Overlay({ isOpen, onClose, current }) {
     return(<div>
@@ -12,8 +12,8 @@ export function Overlay({ isOpen, onClose, current }) {
                     <img className="ovimg"src={current.pic} alt=""/>
                     </a>
                     <div className="title">
-                        <h1 className="test">{current.title}</h1>
-                        <div>{current.search.map(a=><div>{a}<br/></div>)}</div>
+                        <h1>{current.title}</h1>
+                        <div>{current.serarch.map(a=><div>{a}<br/></div>)}</div>
                         <br/>
                         <div className="buttons">{
                             current.books.length>0&&<div>{

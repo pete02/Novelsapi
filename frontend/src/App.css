@@ -1,64 +1,33 @@
-.App {
-  text-align: center;
+.banner{
+    position: absolute;
+    background-color: darkgreen;
+    width: 100%;
+    height: 70px;
 }
 
-.list {
-  position: absolute;
-  left: 2%;
-  top: 10%;
-  text-align: left
+.button{
+    height: 90%;
+    width: 10%;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    margin-right: 0.5%;
+    margin-left: 0.5%;
+    font-size: large;
+    color: wheat;
+    background-color: black;
+    border-radius: 10px;
 }
 
-.listb {
-  size: 200px;
+.block{
+    bottom:0;
+    height: 5px;
+    background-color: black;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
+.all{
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background-color: #282c34;
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.booklist{
-  position: relative;
-}
-.container{
-  columns: 3 auto;
-}
-.photo {
-  height: 286px;
-  width: 200px;
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-div{
-  font-size: medium;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }

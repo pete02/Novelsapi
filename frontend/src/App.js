@@ -1,111 +1,56 @@
+import { useState } from 'react';
 import './App.css';
-import axios from 'axios';
-import React, { useEffect, useState } from 'react';
-import Table from './components/table';
-import Overlay from './components/overlay';
+import Books from './views/books';
+import Getnew from './views/getnew';
 
-async function fetch(){
-  try{
-    let r=(await axios.get("http://localhost:3001/api/json")).data
-    console.log(r)
-    return r
-  }catch{
-    console.log("erro")
-    return []
-  }
-  
-}
+
 
 function App() {
-  const [list,SetList]=useState([])
-  const [filerlist,Setfilterlist]=useState([[],[],[],[],[]])
-  const [search,setSearch]= useState("")
-  const [isOpen,setOpen]=useState(false)
-  const [current, setCurrent]=useState({"img":""})
-
-  useEffect(()=>{
-    fetch().then(r=>SetList(r))
-  },[])
-
-  useEffect(()=>{
-    onSubmit(search)
-  },[list])
-
-  const find=(a,s)=>{
-    if(a&&a.search){
-      const f=a.search.filter(b=>b.includes(s))
-      return f.length>0 || (f.title && f.title.includes(s))
-    }else{
-      return false
-    }
-    
+  let [b1,setb1]= useState(true)
+  let [b2,setb2]= useState(false)
+  let [b3,setb3]= useState(false)
+  const bu1=(event)=>{
+    event.preventDefault();
+    setb1(true)
+    setb2(false)
+    setb3(false)
   }
 
-  const changeSearch=(event)=>{
-    event.preventDefault()
-    setSearch(event.target.value)
-    onSubmit(event.target.value)
+  const bu2=(event)=>{
+    event.preventDefault();
+    setb2(true)
+    setb1(false)
+    setb3(false)
   }
 
-  const handleKeyDown = event => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      onSubmit()
-    }
-  };
-
-  const ouside=(event)=>{
-    event.preventDefault()
-    console.log({"book":search})
-    axios.post("http://localhost:3001/api/getbook",{"book":search})
-      .then(a=>{
-        if(a.data){
-          SetList([...list,a.data])
-        }else{
-          console.log("null")
-        }
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-  }
-  const toggle=(a)=>{
-    setCurrent(a)
-    setOpen(!isOpen)
+  const bu3=(event)=>{
+    event.preventDefault();
+    setb3(true)
+    setb2(false)
+    setb1(false)
   }
 
-  const onSubmit=(s)=>{
-    if(list){
-      const l2=list.filter(a=>find(a,s))
-      const l=[]
-      let l1=[]
-      let i=0
-      l2.map((a,k)=>{
-        l1.push(a)
-        i++
-        if(i===5 || l2.length-1===k){
-          l.push(l1)
-          i=0
-          l1=[]
-        }
-        
-      })
-      Setfilterlist(l)
-    }
-    
-  }
+  return(
+    <div className='all'>
+      <div className='banner'>
+        <button className='button' onClick={bu1}>
+          
+          Main page
+          {b1&&<div className='block'></div>}          
+          </button>
+        <button className='button' onClick={bu2}>Search new books
+        {b2&&<div className='block'></div>}  
+        </button>
+        <button className='button' onClick={bu3}>Modify
+        {b3&&<div className='block'></div>}  
+        </button>
+      </div>
+      {b1&&<Books/>}
+      {b2&&<Getnew/>}
+      {b3&&<div>3</div>}
 
-  return (
-    <div className="App">
-      <header className="App-header">
-        <form>
-          <input value={search} onChange={changeSearch} onKeyDown={handleKeyDown}></input>
-        </form>
-        <Overlay isOpen={isOpen} onClose={toggle} current={current}><h1>open</h1></Overlay>
-        <Table filerlist={filerlist}set={toggle}/>
-      </header>
     </div>
-  );
+  )
 }
 
 export default App;

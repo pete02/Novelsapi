@@ -2,7 +2,8 @@ const fs = require('fs');
 const express=require('express')
 const cors=require('cors')
 const spawn=require('child_process').spawn;
-const {getarticles,getbook,formjson, modify}=require('./bookcode/books')
+const {getarticles,getbook,formjson, modify}=require('./bookcode/books');
+const { Console } = require('console');
 const app=express()
 const port="3001"
 
@@ -29,7 +30,7 @@ app.get("/api",async (req,res)=>{
 */
 //find books on a given series
 app.get("/api/series",async (req,res)=>{
-	let book=formjson(req.body.link)
+	let book=formjson(req.body)
 	res.send(book)
 })
 	
@@ -39,10 +40,9 @@ app.get("/api/modify",async(req,res)=>{
 	res.send(db)
 })
 //find link for different series, to be chosen later
-app.get("/api/findseries",async (req,res)=>{
-	console.time
+app.post("/api/findseries",async (req,res)=>{
+	console.log(req.body.book)
 	res.send(await getarticles(req.body.book))
-	console.timeEnd()
 })
 
 app.listen(port,'0.0.0.0',() => {

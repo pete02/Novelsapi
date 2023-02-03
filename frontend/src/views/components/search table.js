@@ -1,11 +1,21 @@
-const Table=({filerlist,set})=>{
+function sliceIntoChunks(arr, chunkSize) {
+    const res = [];
+    for (let i = 0; i < arr.length; i += chunkSize) {
+        const chunk = arr.slice(i, i + chunkSize);
+        res.push(chunk);
+    }
+    return res;
+}
 
+
+const Table=({filerlist,set})=>{
+    
     if(filerlist.length>0){
         let i=0
         return(
             <table>
                 <tbody>
-                {filerlist.map(a=>{
+                {sliceIntoChunks(filerlist,5).map(a=>{
                     i++
                     return(<tr key={i}>
                         {a.map(b=>{
