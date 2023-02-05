@@ -21,7 +21,8 @@
     "jsdom": "^20.0.3",
     "node-fetch": "^3.3.0",
     "selenium": "^2.20.0",
-    "selenium-webdriver": "^4.7.0"
+    "selenium-webdriver": "^4.8.0",
+    "unzipper": "^0.10.11"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"

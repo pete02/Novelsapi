@@ -1,0 +1,77 @@
+.flippable{
+    perspective: 1000px;
+    padding: 10px;
+}
+
+.Tablediv{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+
+
+}
+
+.Table{
+    position: absolute;
+    
+}
+
+.notflipped{
+    all:inherit;
+    position: relative;
+    transition-duration: 300ms;
+    transform: rotateY(0deg);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+.flipped{
+  transition-duration: 300ms;
+  transform: rotateY(0deg);
+  height: 286px;
+  width: 400px;
+  left: -100px;
+  position: fixed;
+  top:0;
+  bottom: 0;
+  left: -100;
+  right: 0;
+  background-color: black;  
+}
+
+.photo{
+  height: 286px;
+  width: 200px;
+}
+
+.photob{
+    background-color: transparent;
+    border: none;
+}
+
+.cbutton{
+  position: absolute;
+  height: 286px;
+  width: 400px;
+  background-color: transparent;
+  
+}
+
+.pflipped{
+    all:inherit;
+    position: relative;
+    transition-duration: 300ms;
+    transform: rotateY(180deg);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+
+    
+  }
+
+  .Container{
+    color: wheat;
+    background-color: black;
+    width: 400px;
+    height: 572px;
+  }

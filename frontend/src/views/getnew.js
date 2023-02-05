@@ -2,7 +2,7 @@
 import axios from 'axios'
 import { useState } from 'react'
 import './getnew.css'
-import Table from './components/table'
+import SearchTable from './components/search table'
 function Getnew(){
 
     let [search,setSearch]= useState('')
@@ -30,7 +30,7 @@ function Getnew(){
             <input value={search} onChange={changeSearch}></input>
             <button className='get' onClick={find}>get new book</button>
         </form>
-        <Table filerlist={book}set={toggle}/>
+        <SearchTable filerlist={book}set={toggle}/>
     </div>)
 }
 

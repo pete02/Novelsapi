@@ -1,6 +1,0 @@
-scipy
-SpeechRecognition
-noisereduce
-pydub
-fake_useragent
-selenium

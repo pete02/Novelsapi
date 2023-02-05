@@ -8,7 +8,7 @@ export function Overlay({ isOpen, onClose, current }) {
         {isOpen&& <div className="overlay">
             <button className="b" onClick={onClose}></button>
                 <div className="block">
-                    <a className="ovimg" href={current.link} target="_blank" rel="noreferrer">
+                    <a className="ovimg" href={"https://thatnovelcorner.com/"+current.link} target="_blank" rel="noreferrer">
                     <img className="ovimg"src={current.pic} alt=""/>
                     </a>
                     <div className="title">

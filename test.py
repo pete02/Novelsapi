@@ -7,9 +7,9 @@ import sys
 
 
 options= webdriver.ChromeOptions()
-#options.binary_location=r"/usr/bin/brave-browser"
-options.binary_locations=r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
-options.add_argument(r"--user-data-dir=C:\Users\petri\Documents\koodaus\Jnovelsapi\User Data")
+options.binary_location=r"/usr/bin/brave-browser"
+#options.binary_locations=r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+options.add_argument("download.default_directory=./books")
 options.add_argument("--no-sandbox")
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option("useAutomationExtension", False)

@@ -1,3 +1,7 @@
+
+import './searchtable.css'
+import { useState } from 'react';
+import axios from 'axios';
 function sliceIntoChunks(arr, chunkSize) {
     const res = [];
     for (let i = 0; i < arr.length; i += chunkSize) {
@@ -8,32 +12,74 @@ function sliceIntoChunks(arr, chunkSize) {
 }
 
 
-const Table=({filerlist,set})=>{
-    
+const SearchTable=({filerlist,set})=>{
+    const [flip,isflipped]=useState(true)
+    const [sum,setSum]=useState([])
+    const [b,setB]=useState()
+    const [title,setTitle]=useState("")
+    const [book,setBook]=useState({})
+    const flopped=(b)=>{
+        if(b){
+
+            setSum(b.summary.split("<br>"))
+            setB(b.books.length)
+            setTitle(b.title)
+            setBook(b)
+        }
+        
+        console.log("flipå")
+        isflipped(!flip)
+    }
     if(filerlist.length>0){
         let i=0
         return(
-            <table>
-                <tbody>
-                {sliceIntoChunks(filerlist,5).map(a=>{
-                    i++
-                    return(<tr key={i}>
-                        {a.map(b=>{
-                            return(
-                                <td key={b.pic}>
-                                    <button onClick={()=>set(b)}>
-                                        <img src={b.pic} alt="" className='photo'/>
-                                    </button>
-                                </td>
-                            )
-                        })}
-                    </tr>)
-                })}
-                </tbody>
-            </table>
+            <div className='Tablediv'>
+                <table className='Table'>
+                    <tbody>
+                    {sliceIntoChunks(filerlist,5).map(a=>{
+                        i++
+                        return(<tr key={i}>
+                            {a.map(b=>{
+                                return(
+                                    <td key={b.pic}>
+                                        <div className="flippable">
+                                            <div className={flip?"notflipped":"pflipped"}>
+                                                <button className='photob' onClick={(event)=>{
+                                                    event.preventDefault()
+                                                    flopped(b)}}>
+                                                    <img src={b.pic} className="photo" alt=""/>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                )
+                            })}
+                        </tr>)
+                    })}
+                    </tbody>
+                </table>
+                <div className={flip?"pflipped":"notflipped"}>
+                        <button className="Container"onClick={(event)=>{
+                            event.preventDefault()
+                            flopped(null) 
+                        }}>
+                        <div>
+                            <button onClick={(event)=>{
+                                event.preventDefault()
+                                axios.post("http://localhost:3001/api/series",{book})
+                            }}>get</button>
+                        </div>
+                        <br/>
+                        <div>{title}</div>
+                        <div>{sum.map(a=><p><br/>{a}</p>)}</div>
+                        <div> Books:{b}</div>
+                        </button>
+                </div>
+            </div>
+            
         )
     }
     else return(<table></table>)
 }
 
-export default Table
+export default SearchTable

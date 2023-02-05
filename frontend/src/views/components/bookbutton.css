@@ -1,0 +1,7 @@
+.bbutton{
+    background-color: rgba(15, 15, 15, 0.719) ;
+    width: fit-content;
+}
+.bbutton:active{
+    background-color: rgb(0, 0, 0);
+}

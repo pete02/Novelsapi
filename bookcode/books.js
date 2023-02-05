@@ -120,6 +120,7 @@ function modify(i,a){
 async function formjson(a){
 	let db=JSON.parse(fs.readFileSync("./db.json"))
 	a.index=db.length
+	console.log(a)
 	db.push(a)
 	fs.writeFileSync("./db.json",JSON.stringify(db))
 	return a
