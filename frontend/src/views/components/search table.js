@@ -66,8 +66,8 @@ const SearchTable=({filerlist,set})=>{
                         <div>
                             <button onClick={(event)=>{
                                 event.preventDefault()
-                                axios.post("http://localhost:3001/api/series",{book})
-                            }}>get</button>
+                                axios.post("localhost:3001//api/series",{book})
+                            }} className="getbut">get</button>
                         </div>
                         <br/>
                         <div>{title}</div>

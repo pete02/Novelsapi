@@ -8,8 +8,10 @@ const List=({current})=>{
                 <div><button className="bbutton" key={b.book}  onClick={(event)=>{
                     event.preventDefault()
                     console.log(b.link)
-                    axios.post("http://localhost:3001/api/get",{"link":b.link})}} >{b.book}
-                </button></div>
+                    axios.post("/api/get",{"link":b.link})}} >{b.book}
+                </button>
+                {(b.owned)?<button className='owned'/>:<button className='not_owned'/>}
+                </div>
                 )})
             }</div>
     )

@@ -10,7 +10,8 @@ let name
 async function run(link, chromeBinaryPath) {
   let options=await new chrome.Options()
   options.setChromeBinaryPath(chromeBinaryPath)
-
+  link=link.replaceAll('"',"")
+  console.log(link)
   options.setUserPreferences({
     'download.default_directory': download_folder,
     'download.prompt_for_download':false,
@@ -27,10 +28,11 @@ async function run(link, chromeBinaryPath) {
 
   try {
     await driver.get(link);
-    await driver.sleep(3000);
+    await driver.wait(until.elementLocated(By.id('btn-main')), 60000);
     const b = await driver.findElement(By.id("btn-main"));
     if (await b.getAttribute("innerHTML") === "I'm a human") {
-        await b.click();
+      await driver.sleep(5000);
+        await b.click()
     }
     let timer=parseInt(await driver.findElement(By.className("timer")).getText())
     await driver.sleep((timer+1)*1000);
@@ -44,10 +46,12 @@ async function run(link, chromeBinaryPath) {
     name=await driver.findElement(By.className("file-name")).getText()
     console.log(name)
     const fileExists = async () => {
-        return fs.existsSync(`${download_folder}\\${name}`);
+        return fs.existsSync(`${download_folder}/${name}`);
       };
       await driver.wait(fileExists, 300000);
-  } finally {
+  }catch{
+    console.log("error")
+  }finally {
     console.log("done")
     driver.quit()
     exec("unzip -P thatnovelcorner.com /zip/* -d /books", (error, stdout, stderr) => {
@@ -60,18 +64,26 @@ async function run(link, chromeBinaryPath) {
           return;
       }
       console.log(`stdout: ${stdout}`);
-  });
-    exec(`rm -rf ${download_folder}/${name}`, (error, stdout, stderr) => {
-      if (error) {
-          console.log(`error: ${error.message}`);
+      
+      fs.readdir("/zip", (err, files) => {
+        if (err) {
+          console.error(err);
           return;
-      }
-      if (stderr) {
-          console.log(`stderr: ${stderr}`);
-          return;
-      }
-      console.log(`stdout: ${stdout}`);
+        }
+
+        for (const file of files) {
+          fs.unlink(`/zip/${file}`, (err) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+          });
+        }
+
+        console.log('All files deleted successfully');
+      });
   });
+  
   }
 }
 module.exports=run

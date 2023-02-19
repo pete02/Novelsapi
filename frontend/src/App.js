@@ -2,6 +2,7 @@ import { useState } from 'react';
 import './App.css';
 import Books from './views/books';
 import Getnew from './views/getnew';
+import Modify from './views/modify';
 
 
 
@@ -47,7 +48,7 @@ function App() {
       </div>
       {b1&&<Books/>}
       {b2&&<Getnew/>}
-      {b3&&<div>3</div>}
+      {b3&&<Modify/>}
 
     </div>
   )

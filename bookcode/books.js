@@ -4,6 +4,7 @@ const axios = require('axios');
 const {JSDOM}=require('jsdom');
 const { post } = require('jquery');
 const { createBrotliDecompress } = require('zlib');
+const e = require('express');
 
 // python code
 function getbook(url){
@@ -107,23 +108,42 @@ async function getarticles(a){
 }
 
 function modify(i,a){
-	let db=JSON.parse(fs.readFileSync("db.json"))
+	let db=JSON.parse(fs.readFileSync("./db/db.json"))
 	console.log(typeof(a.search))
 	db[i].title=(typeof(a.title)==="undefined")? db[i].title : a.title
-	db[i].search=(typeof(a.search)==="undefined")? db[i].search : a.search
+	db[i].serarch=(typeof(a.search)==="undefined")? db[i].search : a.search
 	db[i].link=(typeof(a.link)==="undefined")? db[i].link : a.link
-	db[i].pic=(typeof(a.pic)==="undefined")? db[i].link : a.pic
-	fs.writeFileSync("db.json",JSON.stringify(db))
+	db[i].pic=(typeof(a.pic)==="undefined")? db[i].pic : a.pic
+	fs.writeFileSync("./db/db.json",JSON.stringify(db))
 	return db[i]
 }
 
+
+function del(i){
+	let db=JSON.parse(fs.readFileSync("./db/db.json"))
+	db.splice(i,1)
+	for(i=0;i<db.length;i++){
+		db[i].index=(db[i].index>i)?db[i].index-1:db[i].index
+	}
+	fs.writeFileSync("./db/db.json",JSON.stringify(db))
+
+}
+
+function owned(i,b,o){
+	console.log(i)
+	console.log(b)
+	console.log(o)
+	let db=JSON.parse(fs.readFileSync("./db/db.json"))
+	db[i].books[b].owned=o?true:false
+	fs.writeFileSync("./db/db.json",JSON.stringify(db))
+}
 async function formjson(a){
-	let db=JSON.parse(fs.readFileSync("./db.json"))
+	let db=JSON.parse(fs.readFileSync("./db/db.json"))
 	a.index=db.length
 	console.log(a)
 	db.push(a)
-	fs.writeFileSync("./db.json",JSON.stringify(db))
+	fs.writeFileSync("./db/db.json",JSON.stringify(db))
 	return a
 }
 
-module.exports= {getbook,getarticles,formjson,modify}
+module.exports= {getbook,getarticles,formjson,modify,owned,del}

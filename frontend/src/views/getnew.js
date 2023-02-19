@@ -3,10 +3,12 @@ import axios from 'axios'
 import { useState } from 'react'
 import './getnew.css'
 import SearchTable from './components/search table'
+import LoadingSpinner from './components/spinner'
 function Getnew(){
 
     let [search,setSearch]= useState('')
     let [book,setBook]=useState([])
+    let [loading,setLoading]=useState(false)
     const changeSearch=(event)=>{
         event.preventDefault()
         setSearch(event.target.value)
@@ -14,8 +16,11 @@ function Getnew(){
 
     const find=(event)=>{
         event.preventDefault()
+        setLoading(true)
         console.log("getting")
-        axios.post("http://localhost:3001/api/findseries",{"book":search}).then(data=>{
+        console.log(loading)
+        axios.post("api/findseries",{"book":search}).then(data=>{
+            setLoading(false)
             setBook(data.data)
         })
     }
@@ -28,8 +33,9 @@ function Getnew(){
 
         <form>
             <input value={search} onChange={changeSearch}></input>
-            <button className='get' onClick={find}>get new book</button>
+            <button className='get' onClick={find}>get new books</button>
         </form>
+        {loading&&<LoadingSpinner/>}
         <SearchTable filerlist={book}set={toggle}/>
     </div>)
 }

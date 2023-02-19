@@ -2,7 +2,7 @@ const fs = require('fs');
 const express=require('express')
 const cors=require('cors')
 const spawn=require('child_process').spawn;
-const {getarticles,getbook,formjson, modify}=require('./bookcode/books');
+const {getarticles,getbook,formjson, modify,owned,del}=require('./bookcode/books');
 const { Console } = require('console');
 const app=express()
 const run=require('./test2')
@@ -21,7 +21,7 @@ app.post("/api/get",async (req,res)=>{
 })
 //get all json of vbooks
 app.get("/api/json",async (req,res)=>{
-	res.json(JSON.parse(fs.readFileSync("./db.json")))
+	res.json(JSON.parse(fs.readFileSync("./db/db.json")))
 })
 //updates all books
 /*
@@ -38,7 +38,17 @@ app.post("/api/series",async (req,res)=>{
 })
 	
 
-app.get("/api/modify",async(req,res)=>{
+app.post("/api/delete",async(req,res)=>{
+	del(req.body.i)
+	res.send("done")
+})
+
+app.post("/api/owned",async (req,res)=>{
+	owned(req.body.series,req.body.book,req.body.owned)
+	res.send("done")
+})
+
+app.post("/api/modify",async(req,res)=>{
 	let db=modify(req.body.i,req.body.book)
 	res.send(db)
 })

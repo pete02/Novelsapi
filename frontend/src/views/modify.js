@@ -2,7 +2,8 @@ import './books.css';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import Table from './components/table';
-import Overlay from './components/overlay';
+import Overlay from './components/overlay mod';
+
 
 async function fetch(){
   try{
@@ -17,7 +18,7 @@ async function fetch(){
 
 
 
-function Books() {
+function Modify() {
   const [list,SetList]=useState([])
   const [filerlist,Setfilterlist]=useState([[],[],[],[],[]])
   const [search,setSearch]= useState("")
@@ -105,4 +106,4 @@ function Books() {
   );
 }
 
-export default Books;
+export default Modify;

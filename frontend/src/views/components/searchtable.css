@@ -17,6 +17,10 @@
     
 }
 
+.getbut{
+  border-radius: 5px;
+  background-color: wheat;
+}
 .notflipped{
     all:inherit;
     position: relative;

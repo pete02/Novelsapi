@@ -1,7 +1,21 @@
 .bbutton{
     background-color: rgba(15, 15, 15, 0.719) ;
     width: fit-content;
+    color: wheat;
 }
 .bbutton:active{
     background-color: rgb(0, 0, 0);
+}
+
+.owned{
+    background-color: green;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+}
+.not_owned{
+    background-color: red;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
 }
