@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 const List=({current})=>{
     let [list,Setlist]=useState(current)
-
+    console.log(list)
     const change=(a,i)=>{
         let  l=list
         l.books[i].owned=a
