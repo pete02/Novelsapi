@@ -59,16 +59,17 @@ const SearchTable=({filerlist,set})=>{
                     </tbody>
                 </table>
                 <div className={flip?"pflipped":"notflipped"}>
+
+                <button onClick={(event)=>{
+                                event.preventDefault()
+                                axios.post("/api/series",{book})
+                            }} className="getbut">get</button>
+
                         <button className="Container"onClick={(event)=>{
                             event.preventDefault()
                             flopped(null) 
                         }}>
-                        <div>
-                            <button onClick={(event)=>{
-                                event.preventDefault()
-                                axios.post("localhost:3001//api/series",{book})
-                            }} className="getbut">get</button>
-                        </div>
+
                         <br/>
                         <div>{title}</div>
                         <div>{sum.map(a=><p><br/>{a}</p>)}</div>

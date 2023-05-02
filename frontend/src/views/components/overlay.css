@@ -9,7 +9,10 @@
   background-color: rgba(0, 0, 0, 0.5);
 
 }
-
+.ok{
+  height: 50px;
+  width: 50px;
+}
 .apply{
   position: absolute;
   left: 60%;
@@ -19,7 +22,11 @@
   background-color: green;
 }
 
-
+.loading{
+  position: absolute;
+  left:90%;
+  top:10;
+}
 .delete{
   position: absolute;
   left: 75%;

@@ -14,33 +14,7 @@ function getbook(url){
 	});
 }
 
-async function getoriginal(a){
-	let data=await JSDOM.fromURL(a)
-	let dom=data.window.document
-	let original=dom.querySelector(`[class*="post-content clear"]`).querySelector("a")
-	if(original.innerHTML=="Refer to original post"||original.innerHTML=="Refer to series page for latest links"){
-		return original.getAttribute("href")
-	}
-	return
-}
 
-function getbooks(book){
-	return(JSDOM.fromURL(book.link).then(data=>{
-		let dom=data.window.document
-		console.log(book.title.length)
-		if(book.title==''){
-			book.title=dom.querySelector(`[class*="post-title entry-title"]`).querySelector('a').innerHTML
-		}
-		let links=dom.querySelector(`[class*="post-content clear"]`).innerHTML.split("<br>")
-		book.pic=dom.querySelector(`[class*="featured-media"]`).querySelector("img").getAttribute("src")
-		let sum=Array.from(dom.querySelector("details").querySelectorAll("p")).map(a=>a.innerHTML).join("\n")
-		links=links.filter(a=>a.includes("(Mirror)"))
-		links=links.map(a=>(a.match(/(?<=\<a\shref=.*?\>).*?(?=\<\/a\>)/g)))
-		book.summary=sum
-		book.books=links.map(a=>{return {"book":a[0].replace(" Premium",""),"link":a[1].match(/href="(.*?)"/g)[0].replace("href=","")}})
-		return book
-	}))
-}
 
 async function check(url){
 	let data=await JSDOM.fromURL(`https://thatnovelcorner.com/${url}`)
@@ -77,8 +51,42 @@ async function check(url){
 			
 		}
 	}
+
 	return book
 	
+}
+
+async function recheck(a){
+	let newbook=await check(a.link)
+	let oldbooks=a.books
+	let newbooks=newbook.books
+
+	oldbooks=oldbooks.map(ob=>{
+		for(nb of newbooks){
+			if(ob.book===nb.book){
+				ob.link=nb.link
+				newbooks.splice(newbooks.indexOf(nb),1)
+				break
+			}
+		}
+		return ob
+	})
+	if(newbooks&&newbooks.length>0){
+
+		oldbooks.push(...newbooks.map(a=>{
+			a.owned=false
+			return a
+		}))
+	}
+	a.books=oldbooks
+	return a
+	}
+
+
+async function update(){
+	let db=JSON.parse(fs.readFileSync("./db/db.json"))
+	db.map(a=>recheck(a))
+	fs.writeFileSync("./db/db.json",JSON.stringify(db))
 }
 
 async function getarticles(a){
@@ -107,8 +115,8 @@ async function getarticles(a){
 	}))
 }
 
-function modify(i,a){
-	let db=JSON.parse(fs.readFileSync("./db/db.json"))
+async function modify(i,a){
+	let db=await JSON.parse(fs.readFileSync("./db/db.json"))
 	console.log(typeof(a.search))
 	db[i].title=(typeof(a.title)==="undefined")? db[i].title : a.title
 	db[i].serarch=(typeof(a.search)==="undefined")? db[i].search : a.search
@@ -119,8 +127,8 @@ function modify(i,a){
 }
 
 
-function del(i){
-	let db=JSON.parse(fs.readFileSync("./db/db.json"))
+async function del(i){
+	let db=await JSON.parse(fs.readFileSync("./db/db.json"))
 	db.splice(i,1)
 	for(i=0;i<db.length;i++){
 		db[i].index=(db[i].index>i)?db[i].index-1:db[i].index
@@ -129,16 +137,18 @@ function del(i){
 
 }
 
-function owned(i,b,o){
-	console.log(i)
+async function owned(i,b,o){
+	console.log("b:")
 	console.log(b)
-	console.log(o)
-	let db=JSON.parse(fs.readFileSync("./db/db.json"))
-	db[i].books[b].owned=o?true:false
+	let db=await JSON.parse(fs.readFileSync("./db/db.json"))
+	if(db[i]&&db[i].books[b]){
+		db[i].books[b].owned=o
+	}
+	
 	fs.writeFileSync("./db/db.json",JSON.stringify(db))
 }
 async function formjson(a){
-	let db=JSON.parse(fs.readFileSync("./db/db.json"))
+	let db=await JSON.parse(fs.readFileSync("./db/db.json"))
 	a.index=db.length
 	console.log(a)
 	db.push(a)
@@ -146,4 +156,4 @@ async function formjson(a){
 	return a
 }
 
-module.exports= {getbook,getarticles,formjson,modify,owned,del}
+module.exports= {getbook,getarticles,formjson,modify,owned,del,update}

@@ -74,7 +74,9 @@ export function Overlay({ isOpen, onClose, current }) {
                     <img className="ovimg"src={current.pic} alt=""/>
                     </a>
                     <button className="apply" onClick={send}>Apply</button>
-                    <button className="delete">Delete</button>
+                    <button className="delete" onClick={()=>{
+                        axios.post("/api/delete",{i:current.index})
+                    }}>Delete</button>
                     <div className="title">
                         <div>
                             <p>title</p>

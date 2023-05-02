@@ -1,7 +1,7 @@
 .banner{
     position: absolute;
     background-color: darkgreen;
-    width: 100%;
+    width: 85%;
     height: 70px;
 }
 
@@ -17,7 +17,63 @@
     background-color: black;
     border-radius: 10px;
 }
+.border{
+    position: absolute;
+    background-color: darkgreen;
+    width: 15%;
+    height: 70px;
+    top:0%;
+    right: 0%;
+}
+.arrow{
+    position: inherit;
+    width: 40px;
+    height: 40px;
+    transition-duration: 300ms;
+}
 
+.arrowspin{
+    position: inherit;
+    width: 40px;
+    height: 40px;
+    animation: rotation 1s infinite linear;
+}
+
+.borderbutton{
+    position: relative;
+    top:5px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: black;
+    color: wheat;
+}
+
+.borderbutton:active{
+    background-color: #282c34;
+}
+
+
+@keyframes rotation {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(359deg);
+    }
+  }
+
+.status{
+    position: absolute;
+    right: 10%;
+    top:10px;
+    align-items: center;
+    background-color: wheat;
+    width: 60%;
+    height: 50px;
+    border-bottom: 20px;
+    border-color: darkgreen;
+}
 .block{
     bottom:0;
     height: 5px;

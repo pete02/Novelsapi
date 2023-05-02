@@ -25,22 +25,15 @@ function Books() {
   const [current, setCurrent]=useState({"img":""})
 
   useEffect(()=>{
-    fetch().then(r=>SetList(r))
-  },[])
+    setTimeout(()=>{
+      console.log("here")
+      fetch().then(r=>SetList(r))
+    },200)
+  },[list])
 
   useEffect(()=>{
     onSubmit(search)
   },[list])
-
-  const find=(a,s)=>{
-    if(a&&a.search){
-      const f=a.search.filter(b=>b.includes(s))
-      return f.length>0 || (f.title && f.title.includes(s))
-    }else{
-      return false
-    }
-    
-  }
 
   const changeSearch=(event)=>{
     event.preventDefault()
@@ -55,21 +48,7 @@ function Books() {
     }
   };
 
-  const ouside=(event)=>{
-    event.preventDefault()
-    console.log({"book":search})
-    axios.post("/api/getbook",{"book":search})
-      .then(a=>{
-        if(a.data){
-          SetList([...list,a.data])
-        }else{
-          console.log("null")
-        }
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-  }
+
   const toggle=(a)=>{
     setCurrent(a)
     setOpen(!isOpen)
