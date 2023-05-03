@@ -1,4 +1,4 @@
-# Jnovelsapi, Work in Progress
+# Novelsapi
 Website to gather and download japanese lightnovels from thatnovelcorner.com. When you land on the site, it will show all the series that it has, showed by the book 
 
 main page
