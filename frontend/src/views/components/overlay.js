@@ -31,7 +31,6 @@ export function Overlay({ isOpen, onClose, current }) {
                     </a>
                     <div className="title">
                         <h1>{current.title}</h1>
-                        <div>{current.serarch.map(a=><div>{a}<br/></div>)}</div>
                         <br/>
                         <div className="buttons">{
                             current.books.length>0&&<div>{

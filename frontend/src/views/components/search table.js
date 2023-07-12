@@ -20,8 +20,8 @@ const SearchTable=({filerlist,set})=>{
     const [book,setBook]=useState({})
     const flopped=(b)=>{
         if(b){
-
-            setSum(b.summary.split("<br>"))
+            console.log(b)
+            setSum(b.sum)
             setB(b.books.length)
             setTitle(b.title)
             setBook(b)
@@ -30,26 +30,32 @@ const SearchTable=({filerlist,set})=>{
         console.log("flipå")
         isflipped(!flip)
     }
+    const screenWidth = window.innerWidth;
+    const photoWidth = 200;
+    const maxPhotos = Math.min(Math.floor(screenWidth / photoWidth), 5);
     if(filerlist.length>0){
         let i=0
         return(
             <div className='Tablediv'>
                 <table className='Table'>
                     <tbody>
-                    {sliceIntoChunks(filerlist,5).map(a=>{
+                    {sliceIntoChunks(filerlist,maxPhotos).map(a=>{
                         i++
                         return(<tr key={i}>
                             {a.map(b=>{
                                 return(
                                     <td key={b.pic}>
                                         <div className="flippable">
-                                            <div className={flip?"notflipped":"pflipped"}>
-                                                <button className='photob' onClick={(event)=>{
-                                                    event.preventDefault()
-                                                    flopped(b)}}>
-                                                    <img src={b.pic} className="photo" alt=""/>
-                                                </button>
-                                            </div>
+                                            {
+                                            flip?<div className={flip?"notflipped":"pflipped"}>
+                                            <button className='photob' onClick={(event)=>{
+                                                event.preventDefault()
+                                                console.log("pressed")
+                                                flopped(b)}}>
+                                                <img src={b.pic} className="photo" alt=""/>
+                                            </button>
+                                        </div>:<div>test</div>
+                                            }
                                         </div>
                                     </td>
                                 )
@@ -60,19 +66,22 @@ const SearchTable=({filerlist,set})=>{
                 </table>
                 <div className={flip?"pflipped":"notflipped"}>
 
-                <button onClick={(event)=>{
-                                event.preventDefault()
-                                axios.post("/api/series",{book})
-                            }} className="getbut">get</button>
+                
 
                         <button className="Container"onClick={(event)=>{
                             event.preventDefault()
                             flopped(null) 
                         }}>
-
+                            <button onClick={(event)=>{
+                                event.preventDefault()
+                                axios.post("/api/save",{book}
+                                )
+                            }} className="getbut">get</button>
+                        <br/>
+                        <br/>
                         <br/>
                         <div>{title}</div>
-                        <div>{sum.map(a=><p><br/>{a}</p>)}</div>
+                        <div>{sum}</div>
                         <div> Books:{b}</div>
                         </button>
                 </div>

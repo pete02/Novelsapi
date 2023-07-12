@@ -1,95 +1,49 @@
-const {isKanji,hasKanji} =require('./kanji')
-const fs=require('fs')
-const axios = require('axios');
-const {JSDOM}=require('jsdom');
-const { post } = require('jquery');
-const { createBrotliDecompress } = require('zlib');
-const e = require('express');
+import { response } from 'express'
+import {JSDOM} from 'jsdom'
+import fetch from 'node-fetch'
+import { File } from 'megajs'
+import fs from 'fs'
+import { exec } from 'child_process'
 
-// python code
-function getbook(url){
-	const pyprocess=spawn('python',["./test.py",url])
-	pyprocess.stdout.on('data', (data) => {
-		console.log("data:"+data.toString())
-	});
-}
-
-
-
-async function check(url){
-	let data=await JSDOM.fromURL(`https://thatnovelcorner.com/${url}`)
-
-	let dom=data.window.document
-	let book
-	let test=dom.querySelector("details")
-	let test2= dom.querySelector("[class*='post-content clear']").querySelector("p").querySelector("a")
-	if(test){
-		
-		let links=dom.querySelector(`[class*="post-content clear"]`).innerHTML.split("<br>")
-		let pic=dom.querySelector(`[class*="featured-media"]`).querySelector("img").getAttribute("src")
-		links=links.filter(a=>a.includes("(Mirror)"))
-		links=links.map(a=>(a.match(/(?<=\<a\shref=.*?\>).*?(?=\<\/a\>)/g)))
-		let title=dom.querySelector(`[class*="post-title entry-title"]`).querySelector('a').innerHTML
-		let sum=Array.from(dom.querySelector("details").querySelectorAll("p")).map(a=>a.innerHTML).join("\n")
-		book={"books":links,"link":url.replace("/",""),"title":title,"serarch":[url,url.replaceAll("-"," ")],"pic":pic,"summary":sum}
-		book.books=links.map(a=>{return {"book":a[0].replace(" Premium",""),"link":a[1].match(/href="(.*?)"/g)[0].replace("href=","")}})
-	}else if(test2 && test2.innerHTML=="LN information"){
-		
-		let links=dom.querySelector(`[class*="post-content clear"]`).innerHTML.split("<br>")
-		let pic=dom.querySelector(`[class*="featured-media"]`).querySelector("img").getAttribute("src")
-		links=links.filter(a=>a.includes("(Mirror)") ||a.includes("(M)"))
-		links=links.map(a=>(a.match(/(?<=\<a\shref=.*?\>).*?(?=\<\/a\>)/g)))
-		let title=dom.querySelector(`[class*="post-title entry-title"]`).querySelector('a').innerHTML
-		book={"books":links,"link":url.replace("/",""),"title":title,"serarch":[url,url.replaceAll("-"," ")],"pic":pic,"summary":""}
-		book.books=links.map(a=>{return {"book":a[0].replace(" Premium",""),"link":a[1].match(/href="(.*?)"/g)[0].replace("href=","")}})
-	} else{
-		let links=dom.querySelector(`[class*="post-content clear"]`).querySelectorAll("a")
-		for(let link of links){
-			if(link.innerHTML==="Refer to series page for latest links"){
-				book=check(link.getAttribute("href").replace("https://thatnovelcorner.com/",""))
-			}
-			
-		}
-	}
-
+//gets series, internal
+async function getSeries(link){
+	console.log(link)
+  return(JSDOM.fromURL(link).then(async data=>{
+    let dom=data.window.document
+	let book=getInfo(dom)
+	book.books=await getVolumes(dom)
 	return book
-	
+  }))
 }
-
-async function recheck(a){
-	let newbook=await check(a.link)
-	let oldbooks=a.books
-	let newbooks=newbook.books
-
-	oldbooks=oldbooks.map(ob=>{
-		for(nb of newbooks){
-			if(ob.book===nb.book){
-				ob.link=nb.link
-				newbooks.splice(newbooks.indexOf(nb),1)
-				break
-			}
-		}
-		return ob
-	})
-	if(newbooks&&newbooks.length>0){
-
-		oldbooks.push(...newbooks.map(a=>{
-			a.owned=false
-			return a
+//gets info, internal
+function getInfo(dom){
+	let sum=Array.from(dom.getElementsByTagName("details")[0].getElementsByTagName("p")).map(a=>a.innerHTML).join("\n")
+	let title=dom.querySelector(`[class*="post-title entry-title"]`).querySelector('a').innerHTML
+	let pic=dom.querySelector(`[class*="featured-media"]`).querySelector("img").getAttribute("src")
+	return {title:title,sum:sum,pic:pic}
+}
+//gets the megalink for the book, internal
+async function getLink(link){
+	return(fetch(link).then(response=>{
+		return(JSDOM.fromURL(`https://linkbypasser.net/?url=${response.url}`).then(data=>{
+			let dom=data.window.document
+			let link=Array.from(dom.getElementById("result").getElementsByTagName("a"))[0]
+			return link.getAttribute("href")
 		}))
-	}
-	a.books=oldbooks
-	return a
-	}
-
-
-async function update(){
-	let db=JSON.parse(fs.readFileSync("./db/db.json"))
-	db.map(a=>recheck(a))
-	fs.writeFileSync("./db/db.json",JSON.stringify(db))
+	}))
+}
+//gets the links to the volumes, internal
+async function getVolumes(dom){
+	let links=Array.from(dom.getElementsByClassName("post-content clear")[0].getElementsByTagName("a"))
+	links=links.filter(l=>l.textContent.includes("Vol"))
+	links=links.map(l=>{return {link:l.getAttribute("href"),name:l.textContent}})
+	links=await Promise.all(links.map(async l=>{return {name:l.name,link:await getLink(l.link)}}))
+	links=links.map(l=>{return{name:l.name,link:l.link,owned:false}})
+	return links
 }
 
-async function getarticles(a){
+//searches for a series, external
+export async function searchSeries(a){
 	return (JSDOM.fromURL(`https://thatnovelcorner.com/?s=${a.replace(" ","+")}`).then(async data=>{
 		console.log("dealing")
 		let dom=data.window.document
@@ -98,14 +52,8 @@ async function getarticles(a){
 		posts=posts.map(post=>post.querySelector("a").getAttribute("href").split("-vol")[0])
 		posts=posts.map(post=>(post.slice(-1)=="/")?post.slice(0,-1):post)
 		posts=posts.filter((e,i)=>posts.indexOf(e)==i)
-		posts=posts.map(post=>post.replace("https://thatnovelcorner.com/",""))
-		posts=posts.map(async p=>check(p))
-		posts= await Promise.all(posts)
-		
-		posts=posts.filter(a=>a)
-		posts.map(a=>console.log(a))
-		posts=posts.filter((a,i)=>posts.indexOf(posts.find(b=>b.title==a.title))==i)
-
+		posts=posts.filter(l=>!l.includes("/light-novels"))
+		posts=await Promise.all(posts.map(async p=>await getSeries(p)))
 		return posts
 
 	}).catch((e)=>{
@@ -115,45 +63,24 @@ async function getarticles(a){
 	}))
 }
 
-async function modify(i,a){
-	let db=await JSON.parse(fs.readFileSync("./db/db.json"))
-	console.log(typeof(a.search))
-	db[i].title=(typeof(a.title)==="undefined")? db[i].title : a.title
-	db[i].serarch=(typeof(a.search)==="undefined")? db[i].search : a.search
-	db[i].link=(typeof(a.link)==="undefined")? db[i].link : a.link
-	db[i].pic=(typeof(a.pic)==="undefined")? db[i].pic : a.pic
-	fs.writeFileSync("./db/db.json",JSON.stringify(db))
-	return db[i]
+//downloads mega link, external
+export async function download(link){
+	const file=File.fromURL(link)
+	const data = await file.downloadBuffer()
+	const path="zip/test.zip"
+	await new Promise((resolve,reject)=>{
+		fs.writeFile(path,data,(error)=>{
+			if(error){
+				reject(error)
+			}else{
+				exec(`unzip -P thatnovelcorner.com zip/* -d books`, console.log("unzipped"))
+				resolve()
+			}
+		})
+	})
+	fs.unlinkSync(path)
 }
 
 
-async function del(i){
-	let db=await JSON.parse(fs.readFileSync("./db/db.json"))
-	db.splice(i,1)
-	for(i=0;i<db.length;i++){
-		db[i].index=(db[i].index>i)?db[i].index-1:db[i].index
-	}
-	fs.writeFileSync("./db/db.json",JSON.stringify(db))
-
-}
-
-async function owned(i,b,o){
-	console.log("b:")
-	console.log(b)
-	let db=await JSON.parse(fs.readFileSync("./db/db.json"))
-	if(db[i]&&db[i].books[b]){
-		db[i].books[b].owned=o
-	}
-	
-	fs.writeFileSync("./db/db.json",JSON.stringify(db))
-}
-async function formjson(a){
-	let db=await JSON.parse(fs.readFileSync("./db/db.json"))
-	a.index=db.length
-	console.log(a)
-	db.push(a)
-	fs.writeFileSync("./db/db.json",JSON.stringify(db))
-	return a
-}
-
-module.exports= {getbook,getarticles,formjson,modify,owned,del,update}
+//getSeries("https://thatnovelcorner.com/baccano").then(a=>console.log("done"))
+//download('https://mega.nz/file/V3A22RIY#AAAAAAAAAAAC18qPn06iZQAAAAAAAAAAAtfKj59OomU').then(a=>console.log("done"))

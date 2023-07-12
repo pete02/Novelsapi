@@ -1,54 +1,47 @@
-const fs = require('fs');
-const express=require('express')
-const cors=require('cors')
-const spawn=require('child_process').spawn;
-const {getarticles,getbook,formjson, modify,owned,del, update}=require('./bookcode/books');
-const { Console } = require('console');
+import fs from 'fs'
+import cors from 'cors'
+import {spawn} from 'child_process'
+import { Console } from 'console';
+import express from 'express'
+
+//import {getarticles,getbook,formjson, modify,owned,del, update} from './bookcode/books';
+
+import { owned, readData, writeData } from './bookcode/db.js';
+import {searchSeries} from './bookcode/books.js'
+
 const app=express()
-const rinlist=require('./test2')
 const port="3001"
 let status="idle"
+
+let added=false
 
 app.use(express.json())
 app.use(cors())
 app.use(express.static("./frontend/build"))
 
-//downloads the book
+//needs work
 app.post("/api/get",async (req,res)=>{
 	status="processing"
 	console.log(req.body.link)
 	//e= await rinlist(req.body.link)
-	//console.log(e)
 	status="idle"
 	res.send("done")
 })
-//get all json of vbooksc
-app.get("/api/json",async (req,res)=>{
-
-	res.json(JSON.parse(fs.readFileSync("./db/db.json")))
-})
-
-//find books on a given series
+//works
 app.get("/api/status",async (req,res)=>{
 	res.send(status)
 })
 
-app.post("/api/series",async (req,res)=>{
-	status="processing"
-	console.log(req.body)
-	let book=formjson(req.body.book)
-	status="idle"
-	res.send(book)
-})
-	
+
+//needs work
 app.get("/api/update/",async (req,res)=>{
 	status="updating"
 	console.log("start update")
-	res.send(await update())
+	//res.send(await update())
 	console.log("finish")
 	status="idle"
 })
-
+//needs work
 app.post("/api/delete",async(req,res)=>{
 	status="processing"
 	del(req.body.i)
@@ -64,17 +57,42 @@ app.post("/api/owned",async (req,res)=>{
 	res.send("done")
 })
 
+
+//needs woek
 app.post("/api/modify",async(req,res)=>{
 	status="processing"
-	let db=modify(req.body.i,req.body.book)
+	//let db=modify(req.body.i,req.body.book)
 	status="idle"
-	res.send(db)
+	//res.send(db)
 })
-//find link for different series, to be chosen later
-app.post("/api/findseries",async (req,res)=>{
+
+//works
+app.post("/api/save",async (req,res)=>{
 	status="processing"
-	console.log(req.body.book)
-	res.send(await getarticles(req.body.book))
+	console.log(req.body)
+	writeData(req.body.book)
+	added=true
+	status="idle"
+	res.send("done")
+})
+//works
+app.get("/api/json",async (req,res)=>{
+	added=false
+	console.log("requested")
+	res.json(await readData())
+})
+
+
+//works
+app.get("/api/search",async (req,res)=>{
+	status="processing"
+	console.log(req.query.s)
+	if(req.query.s&&req.query.s.length>0){
+		res.send(await searchSeries(req.query.s))
+
+	}else{
+		res.send("no book")
+	}
 	status="idle"
 })
 

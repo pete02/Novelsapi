@@ -7,7 +7,9 @@ function sliceIntoChunks(arr, chunkSize) {
     return res;
 }
 
-
+const screenWidth = window.innerWidth;
+const photoWidth = 200;
+const maxPhotos = Math.min(Math.floor(screenWidth / photoWidth), 5);
 const Table=({filerlist,set})=>{
     
     if(filerlist.length>0){
@@ -15,7 +17,7 @@ const Table=({filerlist,set})=>{
         return(
             <table>
                 <tbody>
-                {sliceIntoChunks(filerlist,5).map(a=>{
+                {sliceIntoChunks(filerlist,maxPhotos).map(a=>{
                     i++
                     return(<tr key={i}>
                         {a.map(b=>{

@@ -7,6 +7,7 @@ import Overlay from './components/overlay';
 async function fetch(){
   try{
     let r=(await axios.get("/api/json")).data
+    console.log(r)
     return r
   }catch{
     console.log("erro")
@@ -23,13 +24,10 @@ function Books() {
   const [search,setSearch]= useState("")
   const [isOpen,setOpen]=useState(false)
   const [current, setCurrent]=useState({"img":""})
-
   useEffect(()=>{
-    setTimeout(()=>{
-      console.log("here")
-      fetch().then(r=>SetList(r))
-    },200)
-  },[list])
+    fetch().then(a=>SetList(a))
+  },[])
+
 
   useEffect(()=>{
     onSubmit(search)

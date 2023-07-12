@@ -19,7 +19,7 @@ function Getnew(){
         setLoading(true)
         console.log("getting")
         console.log(loading)
-        axios.post("api/findseries",{"book":search}).then(data=>{
+        axios.get(`/api/search?s=${search}`).then(data=>{
             setLoading(false)
             setBook(data.data)
         })

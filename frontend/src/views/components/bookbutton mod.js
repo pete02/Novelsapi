@@ -14,7 +14,6 @@ const List=({current})=>{
         <div>{
             current.books.map((i,b)=>{
                 
-                console.log(b)
                 return(
                 
                 <div>

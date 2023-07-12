@@ -1,206 +1,84 @@
-const { Builder, Capabilities, By ,until} = require('selenium-webdriver');
-const unzipper = require('unzipper');
-const { exec } = require("child_process");
-const chrome= require("selenium-webdriver/chrome")
-const download_folder="/zip"
-const fs=require('fs');
-const path = require("path");
-const { Console } = require('console');
-const { PassThrough } = require('stream');
+import { response } from 'express'
+import {JSDOM} from 'jsdom'
+import fetch from 'node-fetch'
+import { File } from 'megajs'
+import fs from 'fs'
+import { exec } from 'child_process'
 
-let outlink
-let current=0
-let running=false
-
-async function ouo(driver){
-  console.log(driver.getCurrentUrl())
-  await driver.wait(until.elementLocated(By.tagName("div")),10000)
-  console.log("!gotten div")
-    await driver.wait(until.elementLocated(By.id('btn-main')), 10000);
-    const b = await driver.findElement(By.id("btn-main"));
-    if (await b.getAttribute("innerHTML") === "I'm a human") {
-      await driver.sleep(5000);
-        await b.click()
-    }
-    console.log("next part")
-    let timer=parseInt(await driver.findElement(By.className("timer")).getText())
-    console.log(timer)
-    if(timer && timer!==0){
-      await driver.sleep((timer+1)*2000);
-    }else{
-      await driver.sleep(10000)
-    }
-    
-    let button=await driver.findElement(By.id("btn-main"));
-    console.log(await driver.getCurrentUrl())
-    await driver.sleep(1000)
-    while(await (await driver.getCurrentUrl()).includes("ouo")&&await (await driver.getCurrentUrl()).includes("go")){
-      button.click();
-      await driver.sleep(500)
-    }
+//gets series, internal
+async function getSeries(link){
+	console.log(link)
+  return(JSDOM.fromURL(link).then(async data=>{
+    let dom=data.window.document
+	let book=getInfo(dom)
+	book.books=await getVolumes(dom)
+	return book
+  }))
+}
+//gets info, internal
+function getInfo(dom){
+	let sum=Array.from(dom.querySelector("details").querySelectorAll("p")).map(a=>a.innerHTML).join("\n")
+	let title=dom.querySelector(`[class*="post-title entry-title"]`).querySelector('a').innerHTML
+	let pic=dom.querySelector(`[class*="featured-media"]`).querySelector("img").getAttribute("src")
+	return {title:title,sum:sum,pic:pic}
+}
+//gets the megalink for the book, internal
+async function getLink(link){
+	return(fetch(link).then(response=>{
+		return(JSDOM.fromURL(`https://linkbypasser.net/?url=${response.url}`).then(data=>{
+			let dom=data.window.document
+			let link=Array.from(dom.getElementById("result").getElementsByTagName("a"))[0]
+			return link.getAttribute("href")
+		}))
+	}))
+}
+//gets the links to the volumes, internal
+async function getVolumes(dom){
+	let links=Array.from(dom.getElementsByClassName("post-content clear")[0].getElementsByTagName("a"))
+	links=links.filter(l=>l.textContent.includes("Vol"))
+	links=links.map(l=>{return {link:l.getAttribute("href"),name:l.textContent}})
+	links=await Promise.all(links.map(async l=>{return {name:l.name,link:await getLink(l.link)}}))
+	return links
 }
 
-async function dw(path,i,name){
-  let options=await new chrome.Options()
-  options.setChromeBinaryPath("/usr/bin/brave-browser")
-  options.setUserPreferences({
-    'download.default_directory':download_folder,
-    'download.prompt_for_download':false,
-    'download.directory_upgrade': true,
-    'safebrowsing.enabled': true
-  })
+//searches for a series, external
+export async function searchSeries(a){
+	return (JSDOM.fromURL(`https://thatnovelcorner.com/?s=${a.replace(" ","+")}`).then(async data=>{
+		console.log("dealing")
+		let dom=data.window.document
+		let posts=Array.from(dom.getElementById("posts").querySelectorAll("article"))
+		console.log(posts.length)
+		posts=posts.map(post=>post.querySelector("a").getAttribute("href").split("-vol")[0])
+		posts=posts.map(post=>(post.slice(-1)=="/")?post.slice(0,-1):post)
+		posts=posts.filter((e,i)=>posts.indexOf(e)==i)
+		posts=await Promise.all(posts.map(async p=>await getSeries(p)))
+		return posts
 
-  console.log(outlink)
-  options.addArguments("--no-sandbox")
-  options.addArguments("--disable-dev-shm-usag")
-  options.addArguments("-headless")
-  let driver = await new Builder()
-    .setChromeOptions(options)
-    .forBrowser('chrome')
-    .build();
-  console.log(`retry:${i}`)
-  if(i<10){
-    try{
-      await driver.get(outlink)
-      await driver.wait(until.elementLocated(By.xpath('//*[@id="app"]/div/div[2]/div[1]/div[1]/div[2]/div[2]/button[2]')), 10000);
-      await driver.sleep(1000)
-      outlink=driver.getCurrentUrl()
-      await driver.findElement(By.xpath('//*[@id="app"]/div/div[2]/div[1]/div[1]/div[2]/div[2]/button[2]')).click();
-      console.log("download started")
-      name=await driver.findElement(By.className("file-name")).getText()
-      console.log(name)
-      const fileExists = async () => {
-          return fs.existsSync(`/${name}`);
-        };
-      await driver.wait(fileExists, 30000);
-      await fs.promises.rename(name,`/zip/${name}`)
-      console.log("redownloaded")
-      return 1
-    }catch(e){
-      console.log(e)
-      if(e.toString().includes("session deleted because of page crash")){
-        return await dw(path,i+1)
-      }
-    }
-  }else{
-    return(0)
-  }
+	}).catch((e)=>{
+		console.log(e)
+		console.log("error in getting")
+		return null
+	}))
 }
 
-async function run(link) {
-  let name
-  console.log("started")
-  
-  let ret =""
-  let options=await new chrome.Options()
-  options.setChromeBinaryPath("/usr/bin/brave-browser")
-  options.setUserPreferences({
-    'download.default_directory':download_folder,
-    'download.prompt_for_download':false,
-    'download.directory_upgrade': true,
-    'safebrowsing.enabled': true
-  })
-  link=link.replaceAll('"',"")
-  console.log(link)
-  options.addArguments("--no-sandbox")
-  options.addArguments("--disable-dev-shm-usag")
-  options.addArguments("-headless")
-  let driver = await new Builder()
-    .setChromeOptions(options)
-    .forBrowser('chrome')
-    .build();
-  console.log("driver")
-  try {
-    await driver.get(link);
-    console.log("gotten link")
-    if(link.includes("ouo")){
-      console.log("ouo")
-      let r=true
-      let i=0
-      while(r){
-        if(i<10){
-          try{
-            await ouo(driver)
-          }
-          catch(e){
-            console.log(e)
-            i++
-          }
-        }
-      }
-      
-    }
-    
-    await driver.sleep(4000)
-    console.log("off to download")
-    await driver.wait(until.elementLocated(By.tagName("div")),10000)
-    console.log("page loaded")
-    console.log(await driver.getCurrentUrl())
-
-    await driver.wait(until.elementLocated(By.xpath('//*[@id="app"]/div/div[2]/div[1]/div[1]/div[2]/div[2]/button[2]')), 10000);
-    await driver.sleep(1000)
-    outlink=driver.getCurrentUrl()
-    console.log(outlink)
-    await driver.findElement(By.xpath('//*[@id="app"]/div/div[2]/div[1]/div[1]/div[2]/div[2]/button[2]')).click();
-    console.log("download started")
-    name=await driver.findElement(By.className("file-name")).getText()
-    console.log(name)
-    const fileExists = async () => {
-        return fs.existsSync(`/${name}`);
-      };
-    await driver.wait(fileExists, 30000);
-    await fs.promises.rename(name,`/zip/${name}`)
-  }catch(e){
-    if(e.toString().includes("session deleted because of page crash")){
-      if(await dw("/usr/bin/brave-browser",0,name)==1){
-        ret="done"
-      }else{
-        ret="error"
-      }
-    }else{
-      console.log(e)
-      console.log("error")
-      ret= "error"
-    }
-  }finally {
-
-    driver.quit()
-    await exec(`unzip -P thatnovelcorner.com /zip/* -d /books`, console.log("unzipped"))
-    await  new Promise((resolve) => {
-      setTimeout(resolve, 1000);
-    });
-  for(file of await fs.readdirSync("/zip")){
-    console.log(file)
-    await fs.unlinkSync(`/zip/${file}`)
-  }
-
-  if(!ret.includes("error")){
-    ret="done"
-  }
-
-  }
-  current--
-  running=false
-  return ret
+//downloads mega link, external
+export async function download(link){
+	const file=File.fromURL(link)
+	const data = await file.downloadBuffer()
+	const path="zip/test.zip"
+	await new Promise((resolve,reject)=>{
+		fs.writeFile(path,data,(error)=>{
+			if(error){
+				reject(error)
+			}else{
+				exec(`unzip -P thatnovelcorner.com zip/* -d books`, console.log("unzipped"))
+				resolve()
+			}
+		})
+	})
+	fs.unlinkSync(path)
 }
 
-async function rinlist(l){
-  console.log(running)
-  if(running){
-    current++
-    let c=current
-    while(c>0){
-      while(running){
-        await new Promise(resolve => setTimeout(resolve, 500))
-      }
-      c--
-    }
-    
-  }
-  running=true
-  console.log("start")
-  
-  return run(l)
-}
 
-module.exports=rinlist
+//getSeries("https://thatnovelcorner.com/baccano").then(a=>console.log("done"))
+//download('https://mega.nz/file/V3A22RIY#AAAAAAAAAAAC18qPn06iZQAAAAAAAAAAAtfKj59OomU').then(a=>console.log("done"))

@@ -9,7 +9,6 @@ const But=({b,i,current,turn,done,error})=>{
         setOwned(b.owned)
     },[b])
 
-    console.log(i)
     return(
     <div><button className="bbutton" key={b.book}  onClick={(event)=>{
         turn(true)
@@ -21,13 +20,14 @@ const But=({b,i,current,turn,done,error})=>{
             if(r.data && r.data==="done"){
                 done(true)
                 setOwned(true)
-                axios.post("/api/owned",{"series":current.index,"book":i,"owned":true})
+                console.log(current)
+                axios.post("/api/owned",{"series":current.title,"book":i,"owned":true})
             }else{
                 error(true)
             }
         })
         
-        }} >{b.book}
+        }} >{b.name}
 
         
     </button>
